@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en" class="h-full bg-zinc-950 text-zinc-100 antialiased">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}PII Redaction Workbench{% endblock %}</title>
+  <meta
+    name="description"
+    content="Client-side PII redaction workbench with manual rules, auto-detection, and review workflow."
+  >
+
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icon/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icon/favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icon/favicon-16x16.png') }}">
+
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+
+      --color-background: #09090b;
+      --color-foreground: #fafafa;
+      --color-card: #09090b;
+      --color-card-foreground: #fafafa;
+      --color-popover: #09090b;
+      --color-popover-foreground: #fafafa;
+      --color-primary: #fafafa;
+      --color-primary-foreground: #18181b;
+      --color-secondary: #18181b;
+      --color-secondary-foreground: #fafafa;
+      --color-muted: #18181b;
+      --color-muted-foreground: #a1a1aa;
+      --color-accent: #18181b;
+      --color-accent-foreground: #fafafa;
+      --color-destructive: #7f1d1d;
+      --color-destructive-foreground: #fafafa;
+      --color-border: #27272a;
+      --color-input: #27272a;
+      --color-ring: #d4d4d8;
+
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+    }
+
+    @layer base {
+      * { @apply border-zinc-800; }
+      html { color-scheme: dark; }
+
+      body {
+        @apply min-h-screen bg-zinc-950 text-zinc-50 font-sans;
+        background-image:
+          radial-gradient(circle at top, rgba(255,255,255,0.04), transparent 28%),
+          linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(255,255,255,0));
+      }
+
+      ::selection { @apply bg-zinc-700 text-zinc-50; }
+    }
+
+    @layer components {
+      .shell-page {
+        @apply mx-auto w-full max-w-[1800px] px-4 py-4 md:px-6 md:py-6;
+      }
+
+       .panel-card {
+      @apply min-h-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/85 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur;
+      }
+
+      .panel-header {
+        @apply flex items-start justify-between gap-3 border-b border-zinc-800 px-4 py-3;
+      }
+
+      .panel-title {
+        @apply text-sm font-semibold tracking-[-0.01em] text-zinc-100;
+      }
+
+      .panel-subtitle {
+        @apply mt-1 text-xs text-zinc-400;
+      }
+
+      .btn-redact {
+        @apply inline-flex items-center justify-center rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-950;
+      }
+
+      .btn-add {
+        @apply inline-flex items-center justify-center rounded-md bg-sky-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:ring-offset-2 focus:ring-offset-zinc-950;
+      }
+
+      .btn-copy {
+        @apply inline-flex items-center justify-center rounded-md bg-violet-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:ring-offset-2 focus:ring-offset-zinc-950;
+      }
+
+      .btn-select {
+        @apply inline-flex items-center justify-center rounded-md bg-amber-500 px-3 py-2 text-sm font-medium text-zinc-950 transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-zinc-950;
+      }
+
+      .btn-unselect {
+        @apply inline-flex items-center justify-center rounded-md bg-rose-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2 focus:ring-offset-zinc-950;
+      }
+
+      .btn-danger {
+        @apply inline-flex items-center justify-center rounded-md border border-red-900/50 bg-red-950/30 px-3 py-2 text-sm font-medium text-red-200 transition hover:bg-red-950/50 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-zinc-950;
+      }
+
+      .section-toggle {
+        @apply inline-flex items-center justify-center rounded-md px-2 py-1 text-sm font-medium text-zinc-400 transition hover:bg-zinc-900 hover:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 focus:ring-offset-zinc-950;
+      }
+
+      .input-base {
+        @apply w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400;
+      }
+
+      .textarea-base {
+      @apply w-full min-h-0 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3 text-sm leading-6 text-zinc-100 placeholder:text-zinc-500 outline-none focus:outline-none focus:ring-2 focus:ring-zinc-400;
+      }
+
+      .badge-muted {
+        @apply inline-flex items-center rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-zinc-400;
+      }
+
+      .toolbar-row {
+        @apply flex flex-wrap items-center gap-2;
+      }
+
+      .collapsible-content {
+      @apply min-h-0 overflow-hidden;
+      }
+
+      .table-shell {
+        @apply min-h-0 overflow-hidden rounded-lg border border-zinc-800;
+      }
+
+      .table-base {
+        @apply w-full border-collapse text-sm;
+      }
+
+      .table-base thead {
+        @apply sticky top-0 z-10 bg-zinc-900/95 backdrop-blur;
+      }
+
+      .table-base th {
+        @apply border-b border-zinc-800 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-zinc-400;
+      }
+
+      .table-base td {
+        @apply border-b border-zinc-900 px-3 py-2 align-top text-zinc-200;
+      }
+
+      .table-base tbody tr:hover {
+        @apply bg-zinc-900/60;
+      }
+
+      .table-code {
+        @apply inline-block max-w-full overflow-hidden text-ellipsis whitespace-nowrap rounded bg-zinc-900 px-2 py-1 font-mono text-xs text-zinc-200;
+      }
+
+      .empty-state-block {
+        @apply flex min-h-[140px] items-center justify-center rounded-lg border border-dashed border-zinc-800 bg-zinc-950/60 px-6 py-10 text-center text-sm text-zinc-500;
+      }
+
+      .topbar-shell {
+        @apply mb-4 flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950/80 px-5 py-4 shadow-[0_10px_40px_rgba(0,0,0,0.35)] md:flex-row md:items-center md:justify-between;
+      }
+
+      .app-kicker {
+        @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500;
+      }
+
+      .footer-shell {
+        @apply mt-4 flex items-center justify-between border-t border-zinc-900 px-1 pt-4 text-xs text-zinc-500;
+      }
+
+      .panel-resizer-x {
+        @apply relative z-10 w-3 shrink-0 cursor-col-resize items-center justify-center rounded-full select-none;
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .panel-resizer-y {
+        @apply relative z-10 flex h-3 shrink-0 cursor-row-resize items-center justify-center rounded-full select-none;
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .panel-resizer-x::before,
+      .panel-resizer-y::before {
+        content: "";
+        @apply absolute rounded-full bg-zinc-800 transition;
+        pointer-events: none;
+      }
+
+      .panel-resizer-x::before {
+        @apply bottom-2 top-2 left-1/2 w-px -translate-x-1/2;
+      }
+
+      .panel-resizer-y::before {
+        @apply left-2 right-2 top-1/2 h-px -translate-y-1/2;
+      }
+
+      .panel-resizer-x span,
+      .panel-resizer-y span {
+        @apply relative z-10 rounded-full bg-zinc-700 transition;
+        pointer-events: none;
+      }
+
+      .panel-resizer-x span {
+        @apply h-16 w-1.5;
+      }
+
+      .panel-resizer-y span {
+        @apply h-1.5 w-16;
+      }
+
+      .panel-resizer-x:hover::before,
+      .panel-resizer-y:hover::before {
+        @apply bg-zinc-700;
+      }
+
+      .panel-resizer-x:hover span,
+      .panel-resizer-y:hover span {
+        @apply bg-zinc-500;
+      }
+
+      body.is-resizing {
+        @apply select-none;
+      }
+
+      body.is-resizing * {
+        cursor: inherit !important;
+      }
+
+      .tips-strip {
+      @apply flex flex-wrap gap-2;
+    }
+
+    .tip-chip {
+      @apply inline-flex items-center rounded-md border border-zinc-800 bg-zinc-900/70 px-2.5 py-1 text-[11px] font-medium text-zinc-300;
+    }
+
+    .help-trigger {
+      @apply inline-flex items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 focus:ring-offset-zinc-950;
+    }
+
+    .tooltip-wrap {
+      @apply relative inline-flex;
+    }
+
+    .help-tooltip {
+      @apply pointer-events-none absolute right-0 top-[calc(100%+0.5rem)] z-30 hidden w-80 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs leading-5 text-zinc-200 shadow-xl;
+    }
+
+    .tooltip-wrap:hover .help-tooltip,
+    .tooltip-wrap:focus-within .help-tooltip {
+      @apply block;
+    }
+
+    .resizer-hint {
+      @apply pointer-events-none absolute -top-5 left-1/2 hidden -translate-x-1/2 rounded bg-zinc-900 px-2 py-0.5 text-[10px] uppercase tracking-wide text-zinc-500;
+    }
+
+    .resizer-hint-x {
+      @apply pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 rotate-90 rounded bg-zinc-900 px-2 py-0.5 text-[10px] uppercase tracking-wide text-zinc-500;
+    }
+
+    .panel-resizer-y:hover .resizer-hint,
+    .panel-resizer-y:focus-within .resizer-hint {
+      @apply block;
+    }
+
+    .panel-resizer-x:hover .resizer-hint-x,
+    .panel-resizer-x:focus-within .resizer-hint-x {
+      @apply block;
+    }
+    }
+  </style>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  {% block content %}{% endblock %}
+
+  <script>
+    window.INITIAL_RULES = {{ initial_rules|tojson if initial_rules else '[]' }};
+  </script>
+
+  <script src="{{ url_for('static', filename='js/redaction.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

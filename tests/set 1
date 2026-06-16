@@ -1,0 +1,48 @@
+Case: Client onboarding review
+Analyst: Juan Dela Cruz
+Company: Perplexity
+Partner: Acme Labs
+Project: Project Narra
+
+Contact email: juan.delacruz@perplexity.ai
+Backup email: maria.santos+ops@example-internal.test
+Phone: +63 917 123 4567
+Landline: (02) 8123-4567
+Portal URL: https://portal.perplexity.ai/admin/reset?token=abc123
+Support URL: https://support.acmelabs.test/ticket/12345
+
+Public IPv4: 203.0.113.10
+Alt IPv4: 198.51.100.24
+IPv6: 2001:0db8:85a3:0000:0000:8a2e:0370:7334
+MAC Address: AA:BB:CC:DD:EE:FF
+Cisco MAC: a1b2.c3d4.e5f6
+
+UUID: 550e8400-e29b-41d4-a716-446655440000
+Session: session=ABCDEF1234567890
+Bearer Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc.def
+JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc.def
+
+AWS Access Key: AKIAIOSFODNN7EXAMPLE
+Stripe Key: sk_test_51NabcXYZ1234567890
+GitHub Token: ghp_1234567890abcdefghijklmnopqrst
+Slack Token: xoxb-123456789012-123456789012-abcdefghijklmnop
+
+Credit Card: 4242 4242 4242 4242
+IBAN: GB82WEST12345698765432
+SG NRIC: S1234567A
+SG FIN: F7654321N
+SG UEN: T12AB3456C
+
+Windows Path: C:\Users\juan\Desktop\secrets.txt
+Unix Path: /home/juan/.ssh/id_rsa
+DB URL: postgres://admin:SuperSecret123@db.internal.local:5432/prod
+
+Private Key:
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASC...
+-----END PRIVATE KEY-----
+
+Certificate:
+-----BEGIN CERTIFICATE-----
+MIIDdzCCAl+gAwIBAgIEbmh5...
+-----END CERTIFICATE-----

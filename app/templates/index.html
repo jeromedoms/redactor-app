@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}PII Redaction Workbench{% endblock %}
+
+{% block content %}
+<div class="mobile-only-notice" role="dialog" aria-labelledby="mobile-only-title" aria-describedby="mobile-only-desc">
+  <div class="mobile-only-card">
+    <p class="mobile-only-kicker">Desktop recommended</p>
+    <p id="mobile-only-desc">
+      The redaction workbench uses multi-panel resizing and a wide review layout.
+      Please open this page on a desktop or laptop for the intended experience.
+    </p>
+  </div>
+</div>
+
+<div class="shell-page">
+  <header class="topbar-shell">
+    <div>
+      <p class="app-kicker">Client-side redaction</p>
+      <h1 class="text-xl font-semibold tracking-[-0.02em] text-zinc-50 md:text-2xl">
+        PII Redaction Workbench
+      </h1>
+      <p class="mt-1 max-w-3xl text-sm text-zinc-400">
+        Review raw text, apply manual replacements, auto-detect sensitive values, then verify the final redacted output.
+      </p>
+
+      <div class="tips-strip mt-3">
+        <span class="tip-chip">1. Paste text in Source</span>
+        <span class="tip-chip">2. Add manual rules</span>
+        <span class="tip-chip">3. Click Redact</span>
+        <span class="tip-chip">4. Review Findings</span>
+        <span class="tip-chip">5. Drag separators to resize</span>
+        <span class="tip-chip">6. Copy final output</span>
+      </div>
+    </div>
+
+    <div class="toolbar-row">
+      <div class="tooltip-wrap">
+        <button
+          type="button"
+          class="help-trigger"
+          aria-describedby="workbench-tip"
+        >
+          ? Tips
+        </button>
+        <div id="workbench-tip" class="help-tooltip" role="tooltip">
+          Paste raw text in Source, add custom replacement rules, then click Redact.
+          Review Findings to keep or remove specific replacements, drag separators to resize the layout,
+          and use Copy to copy the final redacted text.
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div
+      id="workspace-form"
+      class="workspace-form flex min-h-[76vh] flex-col gap-4 lg:h-[calc(100vh-13rem)] lg:flex-row"
+    >
+      <section
+        id="pane-left"
+        class="pane-left min-w-0 min-h-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col"
+        style="flex: 0 0 58%;"
+      >
+        <div id="left-column" class="flex h-full min-h-0 flex-col gap-4">
+          <section
+            id="source-collapsible"
+            class="panel-card source-panel flex min-h-0 flex-col overflow-hidden"
+            data-panel="source"
+            style="flex: 1.6 1 0;"
+          >
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Source</h2>
+                <p class="panel-subtitle">Paste raw text here before running redaction.</p>
+              </div>
+
+              <div class="toolbar-row">
+                <button type="button" class="btn-add" id="load-sample-btn">Load Sample Data</button>
+                <button type="button" class="btn-redact" id="run-redact-btn">Redact</button>
+              </div>
+            </div>
+
+            <div id="source-content" class="collapsible-content min-h-0 flex-1 p-4" role="region">
+              <textarea
+                id="source-text"
+                class="textarea-base h-full min-h-[260px] w-full resize-none overflow-y-auto"
+                placeholder="Paste raw text here"
+                spellcheck="false"
+              ></textarea>
+            </div>
+          </section>
+
+          <div
+            id="left-resizer"
+            class="panel-resizer-y"
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Resize source and lower panels"
+          >
+            <span></span>
+            <small class="resizer-hint">Drag to resize</small>
+          </div>
+
+          <div id="left-bottom-stack" class="left-bottom-stack flex min-h-0 flex-1 flex-col gap-4">
+            <section
+              id="rules-collapsible"
+              class="panel-card rules-panel-block flex min-h-0 flex-col"
+              data-panel="rules"
+            >
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Find & Replace</h2>
+                  <p class="panel-subtitle">Add manual replacement rules for names, orgs, projects, or custom tokens.</p>
+                </div>
+
+                <div class="toolbar-row">
+                  <button type="button" class="btn-add" id="add-rule-btn">Add Rule</button>
+                </div>
+              </div>
+
+              <div id="rules-content" class="collapsible-content min-h-0 flex-1 p-4" role="region">
+                <div id="rules-scroll" class="h-full min-h-0 overflow-y-auto pr-1">
+                  <div id="rules-grid" class="grid gap-3"></div>
+                </div>
+              </div>
+            </section>
+
+            <div
+              id="rules-findings-resizer"
+              class="panel-resizer-y"
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label="Resize find and replace and findings"
+            >
+              <span></span>
+              <small class="resizer-hint">Drag to resize</small>
+            </div>
+
+            <section
+              id="findings-collapsible"
+              class="panel-card findings-panel-block flex min-h-0 flex-col overflow-hidden"
+              data-panel="findings"
+            >
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Findings</h2>
+                  <p class="panel-subtitle">Review detected values and choose which replacements to apply.</p>
+                </div>
+
+                <div class="toolbar-row">
+                  <button type="button" class="btn-select" id="check-all-findings">Check all</button>
+                  <button type="button" class="btn-unselect" id="uncheck-all-findings">Uncheck all</button>
+                </div>
+              </div>
+
+              <div
+                id="findings-content"
+                class="collapsible-content flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-4 pb-4"
+                role="region"
+              >
+                <div class="mb-3 shrink-0 toolbar-row">
+                  <span class="badge-muted">Selectable results</span>
+                </div>
+
+                <div class="min-h-0 flex-1 overflow-hidden rounded-[inherit] pb-2">
+                  <div class="table-scroll h-full min-h-0 overflow-y-auto pr-1 pb-6">
+                    <table class="table-base w-full">
+                      <thead>
+                        <tr>
+                          <th class="w-16">Use</th>
+                          <th>Entity</th>
+                          <th>Matched</th>
+                          <th>Replacement</th>
+                        </tr>
+                      </thead>
+                      <tbody id="findings-body">
+                        <tr>
+                          <td colspan="4">
+                            <div class="empty-state-block">
+                              <p>No findings yet. Run redaction to populate this panel.</p>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <div
+        id="main-resizer"
+        class="panel-resizer-x hidden lg:flex"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize left and right panels"
+      >
+        <span></span>
+        <small class="resizer-hint-x">Drag</small>
+      </div>
+
+      <section class="pane-right min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col">
+        <section
+          id="output-collapsible"
+          class="panel-card output-panel flex h-full min-h-0 flex-col"
+          data-panel="output"
+        >
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Redacted Output</h2>
+              <p class="panel-subtitle">Final text after manual replacements and selected auto-detected findings.</p>
+            </div>
+
+            <div class="toolbar-row">
+              <button type="button" class="btn-copy" id="copy-output-btn">Copy</button>
+            </div>
+          </div>
+
+          <div id="output-content" class="collapsible-content min-h-0 flex-1 p-4" role="region">
+            <textarea
+              id="output-text"
+              class="textarea-base h-full w-full resize-none overflow-y-auto"
+              readonly
+              spellcheck="false"
+              placeholder="Redacted output will appear here"
+            ></textarea>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer-shell">
+    <span>developed by d0gban</span>
+    <span>local client-side workflow</span>
+  </footer>
+</div>
+{% endblock %}
